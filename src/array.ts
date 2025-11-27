@@ -17,14 +17,25 @@ export interface IArrayImplementation<T> {
 export class ProxyArray<T> {
 
     private readonly impl: IArrayImplementation<T>
+    private proxyActive: boolean
 
     private constructor(impl: IArrayImplementation<T>) {
         this.impl = impl
+        this.proxyActive = true
     }
 
     static from<T>(impl: IArrayImplementation<T>): T[] {
         const obj = D.ARRAY(impl.elements())
         return new Proxy<T[]>(obj, new ProxyArray(impl))
+    }
+
+    get(target: T[], p: string | symbol, receiver: any): any {
+        switch (p) {
+            // case 'unshift':
+            //     return this.unshift.bind(receiver)
+            default:
+                return Reflect.get(target, p, receiver)
+        }
     }
 
     set(target: T[], p: any, x: any, receiver: any): boolean {
@@ -37,6 +48,16 @@ export class ProxyArray<T> {
             }
         }
         return Reflect.set(target, p, x, receiver)
+    }
+
+    unshift(target: T[], ...elements: T[]): number {
+        // With insertions
+        for (let i = elements.length; --i >= 0;) {
+            this.impl.insert(0, elements[i])
+        }
+
+        // Do the default for the actual array
+        return target.unshift(...elements)
     }
 
 }
