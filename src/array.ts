@@ -1,8 +1,5 @@
 import * as D from '@asmartbear/dyn'
 
-/** Picks the type of element out of the array */
-type ArrayOf<T> = T extends Array<infer U> ? U : never;
-
 /** Implementation of an Array proxy */
 export interface IArrayImplementation<T> {
     /** Returns any iterable over all elements in the array. */
