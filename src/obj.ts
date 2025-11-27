@@ -17,7 +17,7 @@ export class ProxyObject<T extends object> {
 
     private readonly impl: IObjectImplementation<T>
 
-    constructor(impl: IObjectImplementation<T>) {
+    private constructor(impl: IObjectImplementation<T>) {
         this.impl = impl
     }
 
