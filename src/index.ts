@@ -1,1 +1,2 @@
-export { ProxySet } from './set'
+export { ProxySet, ISetImplementation } from './set'
+export { ProxyMap, IMapImplementation } from './map'
