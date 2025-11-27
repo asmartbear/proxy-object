@@ -68,5 +68,11 @@ test('basic object operations', () => {
     T.eq<any, any>(m, { foo: 111, cat: 3 })
     T.eq(impl.counters, { adds: 1, updates: 1, deletes: 1 })
     T.eq(impl.list.toString(), "foo,111,cat,3")
+
+    // Define a property without a value; nothing happens
+    Object.defineProperty(m, 'taco', { writable: true })
+    T.eq<any, any>(m, { foo: 111, cat: 3 })
+    T.eq(impl.counters, { adds: 1, updates: 1, deletes: 1 })
+    T.eq(impl.list.toString(), "foo,111,cat,3")
 })
 
