@@ -1,6 +1,6 @@
 {
   "name": "@asmartbear/proxy-object",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Objects acting like Array, Set, etc., but delegates basic function",
   "keywords": [],
   "scripts": {
