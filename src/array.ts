@@ -37,6 +37,10 @@ export class ProxyArrayAppendOnly<T, IMPL extends IArrayAppendOnlyImplementation
         return new Proxy<T[]>(obj, obj)
     }
 
+    static get [Symbol.species]() {
+        return Array        // causes internal methods to return normal arrays, not wrapped ones
+    }
+
     set(target: T[], p: any, x: any, receiver: any): boolean {
         if (this.state.proxyActive) {
             throw new Error("Cannot set elements in this type of array: " + this.constructor.name)
@@ -116,4 +120,35 @@ export class ProxyArray<T> extends ProxyArrayAppendOnly<T, IArrayImplementation<
         return result
     }
 
+    splice(start: number, deleteCount?: number | undefined, ...insert: T[]): T[] {
+        // Trivials
+        const len = this.length
+        start = ProxyArray.normalizeStart(len, start)
+        deleteCount = ProxyArray.normalizeSpan(len, start, deleteCount)
+
+        // Implementation
+        for (let i = deleteCount; --i >= 0;) {
+            this.impl.delete(start + i)
+        }
+        for (let i = 0; i < insert.length; ++i) {
+            this.impl.insert(start + i, insert[i])
+        }
+
+        // Default
+        this.state.proxyActive = false
+        const result = super.splice(start, deleteCount, ...insert)
+        this.state.proxyActive = true
+        return result
+    }
+
+    static normalizeStart(len: number, start: number | undefined): number {
+        if (!start || !len) return 0
+        if (start < 0) start = Math.max(len + start, 0)    // counting from the end
+        return Math.min(start, len)
+    }
+
+    static normalizeSpan(len: number, start: number, span: number | undefined): number {
+        if (span === undefined) span = len - start        // "to the end" if not given
+        return Math.max(0, Math.min(span, len - start))      // clamp
+    }
 }

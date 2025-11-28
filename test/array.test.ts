@@ -139,6 +139,69 @@ function doDeleteFromEnds(s: string[], impl: UnitArrayImpl<string>) {
     T.eq(impl.list.toString(), "")
 }
 
+function doSplices(s: string[], impl: UnitArrayImpl<string>) {
+    T.len(s, 3)
+    T.eq(s.toString(), "a,b,c")
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0 })
+
+    // replace one element
+    const x1 = s.splice(1, 1, "bb")
+    T.len(s, 3)
+    T.eq(s.toString(), "a,bb,c")
+    T.includes(impl.counters, { appends: 0, inserts: 1, deletes: 1 })
+    T.eq(impl.list.toString(), "a,bb,c")
+    T.eq(x1.toString(), "b")
+
+    // insert two elements
+    const x2 = s.splice(2, 0, "b2", "b3")
+    T.len(s, 5)
+    T.eq(s.toString(), "a,bb,b2,b3,c")
+    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 1 })
+    T.eq(impl.list.toString(), "a,bb,b2,b3,c")
+    T.len(x2, 0)
+
+    // delete to the end
+    const x3 = s.splice(3)
+    T.len(s, 3)
+    T.eq(s.toString(), "a,bb,b2")
+    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 3 })
+    T.eq(impl.list.toString(), "a,bb,b2")
+    T.eq(x3.toString(), "b3,c")
+}
+
+test('magic start', () => {
+    const f = ProxyArray.normalizeStart
+    T.eq(f(3, undefined), 0)
+    T.eq(f(3, 0), 0)
+    T.eq(f(3, 1), 1)
+    T.eq(f(3, 2), 2)
+    T.eq(f(3, 3), 3)
+    T.eq(f(3, 4), 3)
+    T.eq(f(3, 100), 3)
+    T.eq(f(3, -1), 2)
+    T.eq(f(3, -2), 1)
+    T.eq(f(3, -3), 0)
+    T.eq(f(3, -4), 0)
+    T.eq(f(3, -100), 0)
+
+    T.eq(f(0, 0), 0)
+    T.eq(f(0, 1), 0)
+    T.eq(f(0, -1), 0)
+})
+
+test('magic span', () => {
+    const f = ProxyArray.normalizeSpan
+    T.eq(f(3, 1, undefined), 2)
+    T.eq(f(3, 1, 0), 0)
+    T.eq(f(3, 1, 1), 1)
+    T.eq(f(3, 1, 2), 2)
+    T.eq(f(3, 1, 3), 2)
+    T.eq(f(3, 1, 100), 2)
+    T.eq(f(3, 1, -1), 0)
+    T.eq(f(3, 1, -2), 0)
+    T.eq(f(3, 1, -3), 0)
+})
+
 test('append-only array', () => {
     const impl = new UnitArrayAppendOnlyImpl(["a", "b", "c"])
     const s: string[] = ProxyArrayAppendOnly.createAppendOnly(impl)
@@ -161,6 +224,10 @@ test('full array', () => {
     impl = new UnitArrayImpl(["a", "b", "c"])
     s = ProxyArray.create(impl)
     doDeleteFromEnds(s, impl)
+
+    impl = new UnitArrayImpl(["a", "b", "c"])
+    s = ProxyArray.create(impl)
+    doSplices(s, impl)
 
 })
 
