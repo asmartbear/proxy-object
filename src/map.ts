@@ -7,7 +7,7 @@ export interface IMapImplementation<K, V> {
     /** Update an element that is already in the map. */
     update(k: K, v: V): void
     /** Removes an element to the map, that is already in the map. */
-    delete(x: K): void
+    delete(k: K): void
     /** Returns any iterable over all pairs of elements in the map. */
     elements(): Iterable<[K, V]>
 }
@@ -45,6 +45,5 @@ export class ProxyMap<K, V> extends Map<K, V> {
         super.delete(k)
         return true
     }
-
 
 }
