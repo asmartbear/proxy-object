@@ -25,11 +25,12 @@ class UnitArrayImpl<T> extends UnitArrayAppendOnlyImpl<T> implements IArrayImple
         appends: number,
         inserts: number,
         deletes: number,
+        sets: number,
     }
 
     constructor(init: T[]) {
         super(init)
-        this.counters = { appends: 0, inserts: 0, deletes: 0 }
+        this.counters = { appends: 0, inserts: 0, deletes: 0, sets: 0 }
     }
     insert(idx: number, value: T): void {
         T.is(idx >= 0)
@@ -42,6 +43,12 @@ class UnitArrayImpl<T> extends UnitArrayAppendOnlyImpl<T> implements IArrayImple
         T.is(idx < this.list.length)
         this.list.splice(idx, 1)
         ++this.counters.deletes
+    }
+    set(idx: number, x: T): void {
+        T.is(idx >= 0)
+        T.is(idx < this.list.length)
+        this.list[idx] = x
+        ++this.counters.sets
     }
 }
 
@@ -78,40 +85,40 @@ function doAppendTests(s: string[], impl: UnitArrayAppendOnlyImpl<string>) {
 function doPrependTests(s: string[], impl: UnitArrayImpl<string>) {
     T.len(s, 3)
     T.eq(s.toString(), "a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 0 })
 
     // Trivial append
     s.unshift()
     T.len(s, 3)
     T.eq(s.toString(), "a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 0 })
     T.eq(impl.list.toString(), "a,b,c")
 
     // Append a value
     s.unshift("d")
     T.len(s, 4)
     T.eq(s.toString(), "d,a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 1, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 1, deletes: 0, sets: 0 })
     T.eq(impl.list.toString(), "d,a,b,c")
 
     // Append multiple values
     s.unshift("e", "f")
     T.len(s, 6)
     T.eq(s.toString(), "e,f,d,a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 0, sets: 0 })
     T.eq(impl.list.toString(), "e,f,d,a,b,c")
 }
 
 function doDeleteFromEnds(s: string[], impl: UnitArrayImpl<string>) {
     T.len(s, 3)
     T.eq(s.toString(), "a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 0 })
 
     // shift off front
     const x = s.shift()
     T.len(s, 2)
     T.eq(s.toString(), "b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 1 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 1, sets: 0 })
     T.eq(impl.list.toString(), "b,c")
     T.eq(x, "a")
 
@@ -119,14 +126,14 @@ function doDeleteFromEnds(s: string[], impl: UnitArrayImpl<string>) {
     const y = s.pop()
     T.len(s, 1)
     T.eq(s.toString(), "b")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 2 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 2, sets: 0 })
     T.eq(impl.list.toString(), "b")
     T.eq(y, "c")
 
     // pop last one
     T.defined(s.pop())
     T.eq(s.toString(), "")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 3 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 3, sets: 0 })
     T.eq(impl.list.toString(), "")
 
     // Empty list operations
@@ -135,20 +142,20 @@ function doDeleteFromEnds(s: string[], impl: UnitArrayImpl<string>) {
     T.undef(s.shift())
     T.undef(s.shift())
     T.eq(s.toString(), "")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 3 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 3, sets: 0 })
     T.eq(impl.list.toString(), "")
 }
 
 function doSplices(s: string[], impl: UnitArrayImpl<string>) {
     T.len(s, 3)
     T.eq(s.toString(), "a,b,c")
-    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0 })
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 0 })
 
     // replace one element
     const x1 = s.splice(1, 1, "bb")
     T.len(s, 3)
     T.eq(s.toString(), "a,bb,c")
-    T.includes(impl.counters, { appends: 0, inserts: 1, deletes: 1 })
+    T.includes(impl.counters, { appends: 0, inserts: 1, deletes: 1, sets: 0 })
     T.eq(impl.list.toString(), "a,bb,c")
     T.eq(x1.toString(), "b")
 
@@ -156,7 +163,7 @@ function doSplices(s: string[], impl: UnitArrayImpl<string>) {
     const x2 = s.splice(2, 0, "b2", "b3")
     T.len(s, 5)
     T.eq(s.toString(), "a,bb,b2,b3,c")
-    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 1 })
+    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 1, sets: 0 })
     T.eq(impl.list.toString(), "a,bb,b2,b3,c")
     T.len(x2, 0)
 
@@ -164,10 +171,53 @@ function doSplices(s: string[], impl: UnitArrayImpl<string>) {
     const x3 = s.splice(3)
     T.len(s, 3)
     T.eq(s.toString(), "a,bb,b2")
-    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 3 })
+    T.includes(impl.counters, { appends: 0, inserts: 3, deletes: 3, sets: 0 })
     T.eq(impl.list.toString(), "a,bb,b2")
     T.eq(x3.toString(), "b3,c")
 }
+
+function doSetElements(s: string[], impl: UnitArrayImpl<string>) {
+    T.len(s, 3)
+    T.eq(s.toString(), "a,b,c")
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 0 })
+
+    // set an existing element, as number
+    s[1] = 'bb'
+    T.len(s, 3)
+    T.eq(s.toString(), "a,bb,c")
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 1 })
+    T.eq(impl.list.toString(), "a,bb,c")
+
+    // set an existing element, as string
+    s["2"] = 'cc'
+    T.len(s, 3)
+    T.eq(s.toString(), "a,bb,cc")
+    T.includes(impl.counters, { appends: 0, inserts: 0, deletes: 0, sets: 2 })
+    T.eq(impl.list.toString(), "a,bb,cc")
+
+    // illegal
+    T.throws(() => { (s as any)[""] = "no" })
+    T.throws(() => { (s as any)["f"] = "no" })
+
+    // out of bounds
+    T.throws(() => { s[3] = "no" })
+    T.throws(() => { s[-1] = "no" })
+}
+
+test('asIndex', () => {
+    const f = ProxyArray.asIndex
+    T.eq(f(undefined), undefined)
+    T.eq(f(null), undefined)
+    T.eq(f([]), undefined)
+    T.eq(f({}), undefined)
+    T.eq(f(""), undefined)
+    T.eq(f("a"), undefined)
+    T.eq(f("length"), undefined)
+    T.eq(f("1"), 1)
+    T.eq(f("12"), 12)
+    T.eq(f("0"), 0)
+    T.eq(f("-1"), -1)
+})
 
 test('magic start', () => {
     const f = ProxyArray.normalizeStart
@@ -228,6 +278,10 @@ test('full array', () => {
     impl = new UnitArrayImpl(["a", "b", "c"])
     s = ProxyArray.create(impl)
     doSplices(s, impl)
+
+    impl = new UnitArrayImpl(["a", "b", "c"])
+    s = ProxyArray.create(impl)
+    doSetElements(s, impl)
 
 })
 

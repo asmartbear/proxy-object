@@ -14,6 +14,8 @@ export interface IArrayImplementation<T> extends IArrayAppendOnlyImplementation<
     insert(idx: number, x: T): void
     /** Deletes an element at the specified index, which will be in-bounds. */
     delete(idx: number): void
+    /** Sets the element at the specific index, which will be in-bounds. */
+    set(idx: number, x: T): void
 }
 
 /** Proxy object that acts like a native generic object, except read-only except for push(). */
@@ -71,7 +73,16 @@ export class ProxyArray<T> extends ProxyArrayAppendOnly<T, IArrayImplementation<
 
     set(target: T[], p: any, x: any, receiver: any): boolean {
         if (this.state.proxyActive) {
-            throw new Error(`Cannot set element [${String(p)}] in this type of array: ${this.constructor.name}`)
+            const idx = ProxyArray.asIndex(p)
+            if (idx !== undefined) {
+                if (idx >= 0 && idx < target.length) {
+                    this.impl.set(idx, x)
+                } else {
+                    throw new Error(`Cannot set out of bounds element [${idx}] in this type of array: ${this.constructor.name}`)
+                }
+            } else {
+                throw new Error(`Cannot set element [${String(p)}] in this type of array: ${this.constructor.name}`)
+            }
         }
         return Reflect.set(target, p, x, receiver)
     }
@@ -139,6 +150,12 @@ export class ProxyArray<T> extends ProxyArrayAppendOnly<T, IArrayImplementation<
         const result = super.splice(start, deleteCount, ...insert)
         this.state.proxyActive = true
         return result
+    }
+
+    /** Converts a field reference to an array index, only if it's numeric, else undefined */
+    static asIndex(x: any): number | undefined {
+        const y = parseInt(x)
+        return Number.isNaN(y) ? undefined : y
     }
 
     static normalizeStart(len: number, start: number | undefined): number {
